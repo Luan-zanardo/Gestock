@@ -1,0 +1,22 @@
+1) Propósito do Sistema 
+
+O sistema será criado para facilitar o gerenciamento e as movimentações (entradas e saídas) dos produtos, fazendo assim com que o estoque de determinado estabelecimento fique organizado e o empreendedor tenha um controle maior sobre suas mercadorias. Com esse sistema, ele saberá quais itens estão acabando/ em falta, e com isso, ele saberá a hora de comprar determinado produto.
+
+2) Usuários
+
+O usuário principal, ou seja, o Administrador, será o empreendedor e ele terá acesso a todos os recursos, como realiza cadastros e movimentações dos seus produtos.
+
+3) Requisitos Funcionais
+
+Criar, editar, listar e excluir os produtos;
+Criar, editar, listar e excluir os fornecedores; 
+Registrar as movimentações dos produtos;
+O microsserviço de movimentações deve buscar dados dos produtos e fornecedores;
+O microsserviço deve enviar uma atualização para o microsserviço de produtos sempre que houver movimentações no estoque, fazendo assim um ajustando na quantidade dos produtos. 
+
+4) Microsserviços
+
+Para um melhor entendimento do que o sistema fará, abaixo estará listado, resumidamente, os 3 principais microsserviços:
+Produtos - tem como função o controle de produtos no estoque, além do que já foi dito no item 3 - ou seja, um CRUD completo;
+Fornecedores - ele controla as informações acerca dos fornecedores, e também terá um CRUD;
+Movimentações - será o mais complexo e completo, e nele será possível registrar as informações de todos os produtos, bem como fazer pesquisas e dar “baixa” ou “entrada” de determinado produto.
