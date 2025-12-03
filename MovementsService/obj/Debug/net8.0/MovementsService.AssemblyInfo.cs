@@ -13,7 +13,7 @@ using System.Reflection;
 [assembly: System.Reflection.AssemblyCompanyAttribute("MovementsService")]
 [assembly: System.Reflection.AssemblyConfigurationAttribute("Debug")]
 [assembly: System.Reflection.AssemblyFileVersionAttribute("1.0.0.0")]
-[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+9dacd6bf9815c371ef186f7a0a5d1a4d08cd7448")]
+[assembly: System.Reflection.AssemblyInformationalVersionAttribute("1.0.0+700bc139738c6ab6d9a0aed26538b6ef41bfef20")]
 [assembly: System.Reflection.AssemblyProductAttribute("MovementsService")]
 [assembly: System.Reflection.AssemblyTitleAttribute("MovementsService")]
 [assembly: System.Reflection.AssemblyVersionAttribute("1.0.0.0")]

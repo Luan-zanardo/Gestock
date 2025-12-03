@@ -23,7 +23,8 @@ namespace MovementService.Services
         {
             try
             {
-                var url = $"suppliers/{id}";
+                // NOTE: assumindo padrão "api/suppliers/{id}"
+                var url = $"api/suppliers/{id}";
                 _logger.LogDebug("Chamando Suppliers GET {Url}", new { Url = new Uri(_http.BaseAddress!, url) });
 
                 var response = await _http.GetAsync(url);

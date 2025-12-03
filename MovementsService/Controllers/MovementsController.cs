@@ -10,7 +10,7 @@ using MovementService.Services;
 namespace MovementService.Controllers
 {
     [ApiController]
-    [Route("[controller]")]
+    [Route("api/[controller]")]
     public class MovementsController : ControllerBase
     {
         private readonly AppDbContext _context;

@@ -23,7 +23,8 @@ namespace MovementService.Services
         {
             try
             {
-                var url = $"products/{id}";
+                // NOTE: ajustado para chamar a rota "api/products/{id}"
+                var url = $"api/products/{id}";
                 _logger.LogDebug("Chamando Products GET {Url}", new { Url = new Uri(_http.BaseAddress!, url) });
 
                 var response = await _http.GetAsync(url);
@@ -50,7 +51,8 @@ namespace MovementService.Services
         {
             try
             {
-                var url = $"products/{product.Id}";
+                // NOTE: ajustado para chamar a rota "api/products/{id}"
+                var url = $"api/products/{product.Id}";
                 _logger.LogDebug("Chamando Products PUT {Url}", new { Url = new Uri(_http.BaseAddress!, url) });
 
                 var response = await _http.PutAsJsonAsync(url, product);

@@ -17,7 +17,6 @@ builder.Services.AddDbContext<AppDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // HttpClients com BaseAddress - CONFIRA as URIs e ajuste se necessário.
-// Ex.: se os serviços expõem routes em /api/products, ajuste os caminhos dos clients ou inclua '/api/' no BaseAddress.
 builder.Services.AddHttpClient<ProductsClient>(c =>
 {
     c.BaseAddress = new Uri(builder.Configuration["ProductsApi:BaseUrl"] ?? "http://localhost:5184/");
