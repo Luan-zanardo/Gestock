@@ -4,16 +4,29 @@ using MovementService.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Conexão com PostgreSQL
-builder.Services.AddDbContext<AppDbContext>(opt =>
-    opt.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+// Adiciona logging padrão
+builder.Services.AddLogging();
 
-builder.Services.AddHttpClient<ProductsClient>();
-builder.Services.AddHttpClient<SuppliersClient>();
-
+// Add services to the container.
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
+
+// DbContext (verifique connection string em appsettings.json)
+builder.Services.AddDbContext<AppDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// HttpClients com BaseAddress - CONFIRA as URIs e ajuste se necessário.
+// Ex.: se os serviços expõem routes em /api/products, ajuste os caminhos dos clients ou inclua '/api/' no BaseAddress.
+builder.Services.AddHttpClient<ProductsClient>(c =>
+{
+    c.BaseAddress = new Uri(builder.Configuration["ProductsApi:BaseUrl"] ?? "http://localhost:5184/");
+});
+
+builder.Services.AddHttpClient<SuppliersClient>(c =>
+{
+    c.BaseAddress = new Uri(builder.Configuration["SuppliersApi:BaseUrl"] ?? "http://localhost:5122/");
+});
 
 var app = builder.Build();
 
@@ -23,5 +36,6 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
+app.UseAuthorization();
 app.MapControllers();
 app.Run();

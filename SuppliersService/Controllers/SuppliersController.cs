@@ -10,24 +10,17 @@ namespace SuppliersService.Controllers
     public class SuppliersController : ControllerBase
     {
         private readonly AppDbContext _context;
-
-        public SuppliersController(AppDbContext context)
-        {
-            _context = context;
-        }
+        public SuppliersController(AppDbContext context) => _context = context;
 
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Supplier>>> GetAll()
-        {
-            return await _context.Suppliers.ToListAsync();
-        }
+        public async Task<ActionResult<IEnumerable<Supplier>>> GetAll() =>
+            Ok(await _context.Suppliers.ToListAsync());
 
         [HttpGet("{id}")]
-        public async Task<ActionResult<Supplier>> GetById(int id)
+        public async Task<ActionResult<Supplier>> Get(int id)
         {
             var supplier = await _context.Suppliers.FindAsync(id);
-            if (supplier == null) return NotFound();
-            return supplier;
+            return supplier == null ? NotFound() : Ok(supplier);
         }
 
         [HttpPost]
@@ -35,8 +28,7 @@ namespace SuppliersService.Controllers
         {
             _context.Suppliers.Add(supplier);
             await _context.SaveChangesAsync();
-
-            return CreatedAtAction(nameof(GetById), new { id = supplier.Id }, supplier);
+            return CreatedAtAction(nameof(Get), new { id = supplier.Id }, supplier);
         }
 
         [HttpPut("{id}")]
@@ -62,7 +54,6 @@ namespace SuppliersService.Controllers
 
             _context.Suppliers.Remove(supplier);
             await _context.SaveChangesAsync();
-
             return NoContent();
         }
     }

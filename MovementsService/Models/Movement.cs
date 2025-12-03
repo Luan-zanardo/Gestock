@@ -1,3 +1,5 @@
+using System;
+
 namespace MovementService.Models
 {
     public class Movement
@@ -5,10 +7,10 @@ namespace MovementService.Models
         public int Id { get; set; }
         public int ProductId { get; set; }
         public int SupplierId { get; set; }
-
         public int Quantity { get; set; }
-        public string Type { get; set; } = "Entrada"; // Entrada ou Saída
+        public DateTime Date { get; set; } = DateTime.UtcNow;
 
-        public DateTime Date { get; set; } = DateTime.Now;
+        // Agora é string para evitar erros de conversão
+        public string Type { get; set; } = null!;
     }
 }

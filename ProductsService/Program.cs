@@ -1,9 +1,9 @@
 using Microsoft.EntityFrameworkCore;
 using ProductsService.Data;
-using Npgsql.EntityFrameworkCore.PostgreSQL; // <-- IMPORTANTE
 
 var builder = WebApplication.CreateBuilder(args);
 
+// Add services
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
@@ -14,6 +14,7 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 
 var app = builder.Build();
 
+// Swagger
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -21,14 +22,5 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseAuthorization();
-
 app.MapControllers();
-
-// Executa migrations automaticamente
-using (var scope = app.Services.CreateScope())
-{
-    var db = scope.ServiceProvider.GetRequiredService<AppDbContext>();
-    db.Database.Migrate();
-}
-
 app.Run();

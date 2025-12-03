@@ -1,61 +1,137 @@
+using System;
+using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using MovementService.Data;
 using MovementService.Models;
 using MovementService.Services;
-using Microsoft.EntityFrameworkCore;
 
 namespace MovementService.Controllers
 {
     [ApiController]
-    [Route("api/[controller]")]
+    [Route("[controller]")]
     public class MovementsController : ControllerBase
     {
         private readonly AppDbContext _context;
-        private readonly ProductsClient _products;
-        private readonly SuppliersClient _suppliers;
+        private readonly ProductsClient _productsClient;
+        private readonly SuppliersClient _suppliersClient;
+        private readonly ILogger<MovementsController> _logger;
 
-        public MovementsController(AppDbContext context, ProductsClient products, SuppliersClient suppliers)
+        public MovementsController(
+            AppDbContext context,
+            ProductsClient productsClient,
+            SuppliersClient suppliersClient,
+            ILogger<MovementsController> logger)
         {
             _context = context;
-            _products = products;
-            _suppliers = suppliers;
+            _productsClient = productsClient;
+            _suppliersClient = suppliersClient;
+            _logger = logger;
         }
 
-        // GET ALL
         [HttpGet]
-        public async Task<ActionResult<IEnumerable<Movement>>> Get()
+        public async Task<IActionResult> GetAll()
         {
-            return await _context.Movements.ToListAsync();
+            var movements = await _context.Movements.ToListAsync();
+            return Ok(movements);
         }
 
-        // CREATE MOVEMENT
-        [HttpPost]
-        public async Task<ActionResult> CreateMovement(Movement movement)
+        // GET by id para usar no CreatedAtAction
+        [HttpGet("{id}")]
+        public async Task<IActionResult> GetById(int id)
         {
-            // 1️⃣ Verificar se o produto existe
-            var product = await _products.GetProductById(movement.ProductId);
-            if (product == null) return BadRequest("Produto não encontrado.");
+            var movement = await _context.Movements.FindAsync(id);
+            if (movement == null) return NotFound();
+            return Ok(movement);
+        }
 
-            // 2️⃣ Verificar se o fornecedor existe
-            var supplier = await _suppliers.GetSupplierById(movement.SupplierId);
-            if (supplier == null) return BadRequest("Fornecedor não encontrado.");
+        [HttpPost]
+        public async Task<IActionResult> Create([FromBody] Movement movement)
+        {
+            if (movement == null)
+                return BadRequest("Movimentação inválida.");
 
-            // 3️⃣ Registrar movimentação
+            // Valida fields básicos
+            if (movement.ProductId <= 0)
+                return BadRequest("ProductId inválido.");
+
+            if (movement.SupplierId <= 0)
+                return BadRequest("SupplierId inválido.");
+
+            if (movement.Quantity <= 0)
+                return BadRequest("Quantity deve ser maior que zero.");
+
+            if (string.IsNullOrWhiteSpace(movement.Type))
+                return BadRequest("Type é obrigatório. Use 'Entrada' ou 'Saida'.");
+
+            // Normaliza type e valida valores permitidos
+            var typeNormalized = movement.Type.Trim();
+            var isEntrada = typeNormalized.Equals("Entrada", StringComparison.OrdinalIgnoreCase);
+            var isSaida  = typeNormalized.Equals("Saida", StringComparison.OrdinalIgnoreCase);
+
+            if (!isEntrada && !isSaida)
+                return BadRequest("Type inválido. Use 'Entrada' ou 'Saida'.");
+
+            // Busca produto remoto
+            Product? product;
+            try
+            {
+                product = await _productsClient.GetProduct(movement.ProductId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao buscar produto {ProductId}.", movement.ProductId);
+                return StatusCode(502, "Erro ao contactar serviço de produtos.");
+            }
+
+            if (product == null)
+                return NotFound("Produto não encontrado");
+
+            // Busca fornecedor remoto
+            Supplier? supplier;
+            try
+            {
+                supplier = await _suppliersClient.GetSupplier(movement.SupplierId);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro ao buscar fornecedor {SupplierId}.", movement.SupplierId);
+                return StatusCode(502, "Erro ao contactar serviço de fornecedores.");
+            }
+
+            if (supplier == null)
+                return NotFound("Fornecedor não encontrado");
+
+            // Validação de quantidade para saida
+            if (isSaida && product.Quantity < movement.Quantity)
+                return BadRequest("Quantidade insuficiente no estoque");
+
+            // Ajusta o estoque no produto remoto
+            if (isEntrada)
+                product.Quantity += movement.Quantity;
+            else
+                product.Quantity -= movement.Quantity;
+
+            // Atualiza produto remoto
+            try
+            {
+                await _productsClient.UpdateProduct(product);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Falha ao atualizar estoque do produto {ProductId}.", product.Id);
+                return StatusCode(502, "Falha ao atualizar produto no serviço remoto.");
+            }
+
+            // Persistir movimentação localmente
+            // Salva o Type normalizado (por exemplo, "Entrada" ou "Saida")
+            movement.Type = isEntrada ? "Entrada" : "Saida";
+
             _context.Movements.Add(movement);
             await _context.SaveChangesAsync();
 
-            // 4️⃣ Atualizar quantidade do produto no ProductsService
-            int currentQuantity = product.quantity;
-            int finalQuantity = movement.Type == "Entrada" ? currentQuantity + movement.Quantity
-                                                           : currentQuantity - movement.Quantity;
-
-            await _products.UpdateProductQuantity(movement.ProductId, finalQuantity);
-
-            return Ok(new
-            {
-                Message = "Movimentação registrada e estoque atualizado.",
-                Movement = movement
-            });
+            return CreatedAtAction(nameof(GetById), new { id = movement.Id }, movement);
         }
     }
 }
